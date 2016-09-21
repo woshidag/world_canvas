@@ -103,18 +103,20 @@ class MapManager:
         # Set up map publisher and publish the last used map, if any
         self.map_publisher = rospy.Publisher('map', OccupancyGrid, latch=True, queue_size=1)
 
-        try:
-            # self.last_map = rospy.get_param('~last_map_id')
-            # map = self.lookup_map(self.last_map)
-            self.last_map = rospy.get_param('~last_map_name')
-            map = self.lookup_last_map(self.last_map)
-            if map is None:
-                # rospy.logerr("Invalid last_map_id: %s" % str(self.last_map))
-                rospy.logerr("Invalid last_map_name: %s" % str(self.last_map))
-            else:
-                self.map_publisher.publish(map)
-        except KeyError:
-            self.last_map = None
+        self.auto_publish_map = rospy.get_param('~auto_publish_map');
+        if self.auto_publish_map:        
+            try:
+                # self.last_map = rospy.get_param('~last_map_id')
+                # map = self.lookup_map(self.last_map)
+                self.last_map = rospy.get_param('~last_map_name')
+                map = self.lookup_last_map(self.last_map)
+                if map is None:
+                    # rospy.logerr("Invalid last_map_id: %s" % str(self.last_map))
+                    rospy.logerr("Invalid last_map_name: %s" % str(self.last_map))
+                else:
+                    self.map_publisher.publish(map)
+            except KeyError:
+                self.last_map = None
 
         rospy.loginfo("Map manager : initialized.")
 
