@@ -11,5 +11,6 @@
   <node pkg="world_canvas_server" type="world_canvas_server" name="world_canvas_server" args="$(arg debug)" output="screen">
     <param name="start_map_manager" value="true"/>
     <param name="auto_save_map" value="false"/>
+    <param name="last_map_name" value="qww"/>
   </node> 
 </launch>

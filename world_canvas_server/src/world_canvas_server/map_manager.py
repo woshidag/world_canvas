@@ -88,6 +88,7 @@ class MapManager:
         # Set up map management services
         self.list_maps_srv   = rospy.Service('list_maps',   ListMaps,   self.list_maps)
         self.publish_map_srv = rospy.Service('publish_map', PublishMap, self.publish_map)
+        # self.publish_map_by_name_srv = rospy.Service('publish_map_by_name', PublishMapByName, self.publish_map_by_name)
         self.delete_map_srv  = rospy.Service('delete_map',  DeleteMap,  self.delete_map)
         self.rename_map_srv  = rospy.Service('rename_map',  RenameMap,  self.rename_map)
         self.save_map_srv    = rospy.Service('save_map',    SaveMap,    self.save_map)
@@ -103,10 +104,13 @@ class MapManager:
         self.map_publisher = rospy.Publisher('map', OccupancyGrid, latch=True, queue_size=1)
 
         try:
-            self.last_map = rospy.get_param('~last_map_id')
-            map = self.lookup_map(self.last_map)
+            # self.last_map = rospy.get_param('~last_map_id')
+            # map = self.lookup_map(self.last_map)
+            self.last_map = rospy.get_param('~last_map_name')
+            map = self.lookup_last_map(self.last_map)
             if map is None:
-                rospy.logerr("Invalid last_map_id: %s" % str(self.last_map))
+                # rospy.logerr("Invalid last_map_id: %s" % str(self.last_map))
+                rospy.logerr("Invalid last_map_name: %s" % str(self.last_map))
             else:
                 self.map_publisher.publish(map)
         except KeyError:
@@ -155,6 +159,23 @@ class MapManager:
             rospy.logerr("No map found for uuid %s" % uuid)
             return None
 
+    def lookup_map_by_name(self, name):
+        rospy.logdebug("Load map %s" % name)
+        matching_maps = self.map_collection.query({'name': {'$in': [name]}})
+        try:
+            return matching_maps.next()[0]
+        except StopIteration:
+            rospy.logerr("No map found for name %s" % name)
+            return None
+
+    def lookup_last_map(self, name):
+        rospy.logdebug("Load map %s" % name)
+        matching_maps = self.map_collection.query({'name': {'$in': [name]}}, metadata_only=False, sort_by='creation_time', ascending=False)
+        try:
+            return matching_maps.next()[0]
+        except StopIteration:
+            rospy.logerr("No map found for name %s" % name)
+            return None
 
     def publish_map(self, request):
         rospy.logdebug("Service call : publish_map %s" % request.map_id)
